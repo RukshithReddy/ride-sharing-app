@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride Sharing App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Simple transition for page visibility */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            max-width: 500px;
+            width: 90%;
+        }
+        .modal-hidden {
+            display: none;
+        }
+
+        /* Styles for the new autocomplete suggestions */
+        .autocomplete-container {
+            position: relative;
+        }
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 999;
+        }
+        .autocomplete-suggestions li {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .autocomplete-suggestions li:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div id="app" class="container mx-auto p-4 max-w-4xl">
+        <nav class="bg-white p-4 rounded-lg shadow-md mb-6 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold text-indigo-600" onclick="navigateTo('home')">RideShare</a>
+            <div id="nav-links">
+                </div>
+        </nav>
+
+        <main id="main-content">
+            <div id="home-page" class="page active">
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Find Your Next Ride</h1>
+                    <form id="search-ride-form" class="space-y-4">
+                        
+                        <div class="autocomplete-container">
+                            <label for="source" class="block text-sm font-medium text-gray-700">From</label>
+							<input type="text" id="source" name="source" required autocomplete="off" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <ul id="search-source-suggestions" class="autocomplete-suggestions"></ul>
+                          </div>
+                        <div class="autocomplete-container">
+                        
+                            <label for="destination" class="block text-sm font-medium text-gray-700">To</label>
+                            <input type="text" id="destination" name="destination" required autocomplete="off" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <ul id="search-destination-suggestions" class="autocomplete-suggestions"></ul>
+                        </div>
+                        <div>
+                            <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
+                            <input type="date" id="date" name="date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-search mr-2"></i> Find a Ride
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div id="login-page" class="page">
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+                    <form id="login-form" class="space-y-4">
+                        <div>
+                            <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="login-email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div>
+                            <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
+                            <input type="password" id="login-password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Login</button>
+                    </form>
+                </div>
+            </div>
+            <div id="register-page" class="page">
+                 <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold mb-6 text-center">Create an Account</h2>
+                    <form id="register-form" class="space-y-4">
+                        <input type="text" id="register-name" placeholder="Full Name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        <input type="email" id="register-email" placeholder="Email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        <input type="password" id="register-password" placeholder="Password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Register as:</label>
+                            <div class="mt-2 flex space-x-4">
+                                <label><input type="radio" name="role" value="ROLE_PASSENGER" checked> Passenger</label>
+                                <label><input type="radio" name="role" value="ROLE_DRIVER"> Driver</label>
+                            </div>
+                        </div>
+                        <div id="driver-fields" class="hidden space-y-4 pt-4 border-t">
+                            <h3 class="font-semibold">Vehicle Details</h3>
+                            <input type="text" id="register-model" placeholder="Car Model (e.g., Toyota Camry)" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            <input type="text" id="register-license" placeholder="License Plate" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            <input type="number" id="register-capacity" placeholder="Seat Capacity" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Register</button>
+                    </form>
+                </div>
+            </div>
+            <div id="rides-list-page" class="page">
+                <h2 class="text-2xl font-bold mb-4">Available Rides</h2>
+                <div id="rides-container" class="space-y-4">
+                    </div>
+            </div>
+
+            <div id="driver-dashboard-page" class="page">
+			    <h2 class="text-2xl font-bold mb-4">Driver Dashboard</h2>
+			    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+			        <div class="bg-white p-6 rounded-lg shadow-md">
+			            <h3 class="text-xl font-semibold mb-4">Post a New Ride</h3>
+			            <form id="post-ride-form" class="space-y-4">
+			                <div class="autocomplete-container">
+			                    <label for="post-source" class="block text-sm font-medium text-gray-700">From</label>
+			                    <input type="text" id="post-source" placeholder="Start location" required autocomplete="off" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+			                    <ul id="post-source-suggestions" class="autocomplete-suggestions"></ul>
+			                </div>
+
+			                <div class="autocomplete-container">
+			                    <label for="post-destination" class="block text-sm font-medium text-gray-700">To</label>
+			                    <input type="text" id="post-destination" placeholder="Destination" required autocomplete="off" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+			                    <ul id="post-destination-suggestions" class="autocomplete-suggestions"></ul>
+			                </div>
+			                
+                        <div class="fare-section space-y-2">
+			                    <label for="post-fare" class="block text-sm font-medium text-gray-700">Fare (per seat)</label>
+			                    <div class="flex items-center space-x-2">
+			                        <input name="fare" id="post-fare" type="number" step="0.01" placeholder="₹" required class="flex-grow mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+			                        <button type="button" id="calculate-fare-btn" class="py-2 px-4 bg-gray-200 text-black rounded-md hover:bg-gray-300 whitespace-nowrap">Estimate Fare</button>
+			                    </div>
+			                </div>
+
+			                <div>
+			                    <label for="post-departure" class="block text-sm font-medium text-gray-700">Date and Time</label>
+			                    <input type="datetime-local" id="post-departure" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+			                </div>
+			                <div>
+			                    <label for="post-seats" class="block text-sm font-medium text-gray-700">Available Seats</label>
+			                    <input type="number" id="post-seats" min="1" placeholder="e.g., 3" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+			                </div>
+			                
+			                <button type="submit" class="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Post Ride</button>
+			            </form>
+			        </div>
+			        <div class="bg-white p-6 rounded-lg shadow-md">
+			            <h3 class="text-xl font-semibold mb-4">My Posted Rides</h3>
+			            <div id="my-posted-rides-container" class="space-y-3"></div>
+			        </div>
+			    </div>
+			</div>
+			
+            <div id="passenger-dashboard-page" class="page">
+                <h2 class="text-2xl font-bold mb-4">Passenger Dashboard</h2>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4">My Bookings</h3>
+                    <div id="my-bookings-container" class="space-y-3"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="payment-page" class="page">
+		<div class="bg-white p-8 rounded-lg shadow-lg">
+			<h2 class="text-2xl font-bold mb-6 text-center">Complete Your Payment</h2>
+			<div class="mb-4">
+				<p><strong>Ride:</strong> <span id="payment-ride-details"></span></p>
+				<p><strong>Fare:</strong> <span id="payment-fare"></span></p>
+			</div>
+			<form id="payment-form" class="space-y-4">
+				<input type="hidden" id="payment-booking-id">
+				<div>
+					<label for="card-number" class="block text-sm font-medium text-gray-700">Card Number</label>
+					<input type="text" id="card-number" placeholder="XXXX XXXX XXXX XXXX" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+				</div>
+				<div class="grid grid-cols-2 gap-4">
+					<div>
+						<label for="expiry-date" class="block text-sm font-medium text-gray-700">Expiry Date</label>
+						<input type="text" id="expiry-date" placeholder="MM/YY" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+					</div>
+					<div>
+						<label for="cvv" class="block text-sm font-medium text-gray-700">CVV</label>
+						<input type="text" id="cvv" placeholder="123" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+					</div>
+				</div>
+				<button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">Pay Now</button>
+			</form>
+		</div>
+	</div>
+
+    <div id="gemini-modal" class="modal-overlay modal-hidden">
+        <div class="modal-content">
+            <h3 id="modal-title" class="text-xl font-bold mb-4"></h3>
+            <div id="modal-body" class="text-gray-700 whitespace-pre-wrap"></div>
+            <button id="modal-close-btn" class="mt-6 w-full py-2 px-4 bg-gray-300 text-black rounded-md hover:bg-gray-400">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api'; 
+        const state = {
+            token: localStorage.getItem('token'),
+            role: localStorage.getItem('role'),
+        };
+
+        // State variables for address autocomplete and fare calculation
+        let sourceCoords = null;
+        let destinationCoords = null;
+        let debounceTimer;
+
+        // --- API HELPER ---
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (state.token) {
+                headers['Authorization'] = `Bearer ${state.token}`;
+            }
+            const config = { method, headers };
+            if (body) {
+                config.body = JSON.stringify(body);
+            }
+            try {
+                const response = await fetch(API_BASE_URL + endpoint, config);
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Unauthorized (401). Please log in again.');
+                    }
+                    if (response.status === 403) {
+                        throw new Error('Forbidden (403). Your account lacks permission for this action.');
+                    }
+                    const errorText = await response.text();
+                    throw new Error(errorText || `HTTP error! status: ${response.status}`);
+                }
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return await response.json();
+                } else {
+                    return await response.text();
+                }
+            } catch (error) {
+                console.error('API Call Failed:', error);
+                showModal("API Error", `Error: ${error.message}`);
+                throw error;
+            }
+        }
+
+        // --- PAGE NAVIGATION ---
+        function navigateTo(pageId) {
+            if (pageId === 'driver-dashboard' && state.role !== 'ROLE_DRIVER') {
+                showModal('Access Denied', 'Please log in as a Driver to access the driver dashboard.');
+                return;
+            }
+            if (pageId === 'passenger-dashboard' && state.role !== 'ROLE_PASSENGER') {
+                showModal('Access Denied', 'Please log in as a Passenger to access the passenger dashboard.');
+                return;
+            }
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(`${pageId}-page`).classList.add('active');
+            window.location.hash = pageId;
+        }
+
+        // --- UI UPDATES & MODAL ---
+        function updateNav() {
+            const navLinks = document.getElementById('nav-links');
+            if (state.token) {
+                let dashboardLink = '';
+                if (state.role === 'ROLE_DRIVER') {
+                    dashboardLink = `<a href="#driver-dashboard" class="text-gray-600 hover:text-indigo-600" onclick="navigateTo('driver-dashboard'); loadDriverDashboard();">Dashboard</a>`;
+                } else {
+                    dashboardLink = `<a href="#passenger-dashboard" class="text-gray-600 hover:text-indigo-600" onclick="navigateTo('passenger-dashboard'); loadPassengerDashboard();">Dashboard</a>`;
+                }
+                navLinks.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        ${dashboardLink}
+                        <button onclick="logout()" class="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Logout</button>
+                    </div>
+                `;
+            } else {
+                navLinks.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <a href="#login" class="text-gray-600 hover:text-indigo-600" onclick="navigateTo('login')">Login</a>
+                        <a href="#register" class="bg-indigo-600 text-white px-3 py-1 rounded-md hover:bg-indigo-700" onclick="navigateTo('register')">Sign Up</a>
+                    </div>
+                `;
+            }
+        }
+        function showModal(title, body) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-body').textContent = body;
+            document.getElementById('gemini-modal').classList.remove('modal-hidden');
+        }
+        function hideModal() {
+            document.getElementById('gemini-modal').classList.add('modal-hidden');
+        }
+
+        // --- AUTHENTICATION ---
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            state.token = null;
+            state.role = null;
+            updateNav();
+            navigateTo('home');
+        }
+
+        // --- Functions for OpenStreetMap API integration ---
+        async function fetchAddressSuggestions(query, suggestionsElement) {
+            if (query.length < 3) {
+                suggestionsElement.innerHTML = '';
+                return;
+            }
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                displaySuggestions(data, suggestionsElement);
+            } catch (err) {
+                console.error("Failed to fetch address suggestions:", err);
+            }
+        }
+
+        function displaySuggestions(suggestions, suggestionsElement) {
+            suggestionsElement.innerHTML = '';
+            suggestions.forEach(s => {
+                const li = document.createElement('li');
+                li.textContent = s.display_name;
+                li.onclick = () => {
+                    handleSelectSuggestion(s, suggestionsElement.id);
+                };
+                suggestionsElement.appendChild(li);
+            });
+        }
+
+        function handleSelectSuggestion(suggestion, suggestionsId) {
+            const isSource = suggestionsId.includes('source');
+            const inputElement = document.getElementById(isSource ? 'post-source' : 'post-destination');
+            const suggestionsElement = document.getElementById(suggestionsId);
+            
+            inputElement.value = suggestion.display_name;
+            const coords = { lat: parseFloat(suggestion.lat), lon: parseFloat(suggestion.lon) };
+
+            if (isSource) {
+                sourceCoords = coords;
+            } else {
+                destinationCoords = coords;
+            }
+            suggestionsElement.innerHTML = ''; // Clear suggestions
+        }
+
+        // --- EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            updateNav();
+            const hash = window.location.hash.replace('#', '');
+            if (hash && document.getElementById(`${hash}-page`)) {
+                navigateTo(hash);
+            } else {
+                navigateTo('home');
+            }
+            document.getElementById('modal-close-btn').addEventListener('click', hideModal);
+           
+
+            // Form Submissions
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                try {
+                    const data = await apiCall('/auth/login', 'POST', { email, password });
+                    state.token = data.token;
+                    state.role = data.role;
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('role', data.role);
+                    updateNav();
+                    if (data.role === 'ROLE_DRIVER') {
+                        navigateTo('driver-dashboard');
+                        loadDriverDashboard();
+                    } else {
+                        navigateTo('passenger-dashboard');
+                        loadPassengerDashboard();
+                    }
+                } catch (error) {}
+            });
+            document.getElementById('register-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const role = document.querySelector('input[name="role"]:checked').value;
+                const payload = {
+                    name: document.getElementById('register-name').value,
+                    email: document.getElementById('register-email').value,
+                    password: document.getElementById('register-password').value,
+                    role: role,
+                };
+                // This block is essential for driver registration
+
+                if (role === 'ROLE_DRIVER') {
+                    payload.model = document.getElementById('register-model').value;
+                    payload.licensePlate = document.getElementById('register-license').value;
+                    payload.capacity = parseInt(document.getElementById('register-capacity').value);
+                }
+                try {
+                    const message = await apiCall('/auth/register', 'POST', payload);
+                    showModal("Registration Success", message);
+                    navigateTo('login');
+                } catch (error) {}
+            });
+            document.getElementById('search-ride-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const source = document.getElementById('source').value;
+                const destination = document.getElementById('destination').value;
+                const date = document.getElementById('date').value;
+                if (!date) {
+                    showModal("Input Required", "Please select a date for your ride search.");
+                    return;
+                }
+                try {
+                    const rides = await apiCall(`/rides/search?source=${source}&destination=${destination}&date=${date}`);
+                    displayRides(rides);
+                    navigateTo('rides-list');
+                } catch (error) {}
+            });
+            
+          /*  document.getElementById('post-ride-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const fareValue = document.getElementById('post-fare').value;
+                if (!fareValue) {
+                    showModal("Input Required", "Please calculate or enter the fare.");
+                    return;
+                }
+             */
+
+                // CORE FIX: Host Ride form submission logic
+                document.getElementById('post-ride-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    if (!sourceCoords || !destinationCoords) {
+                        showModal("Input Required", "Please select source and destination from suggestions before posting.");
+                        return;
+                    }
+             /*   const payload = {
+                    source: document.getElementById('post-source').value,
+                    destination: document.getElementById('post-destination').value,
+                    dateTime: document.getElementById('post-departure').value,
+                    availableSeats: parseInt(document.getElementById('post-seats').value),
+                    fare: parseFloat(fareValue),
+                };
+             */
+                
+             // The payload must match the backend's RideRequest.java DTO
+                const payload = {
+                    source: document.getElementById('post-source').value,
+                    destination: document.getElementById('post-destination').value,
+                    dateTime: document.getElementById('post-departure').value,
+                    availableSeats: parseInt(document.getElementById('post-seats').value),
+                    fare: parseFloat(document.getElementById('post-fare').value),
+                    startLatitude: sourceCoords.lat,
+                    startLongitude: sourceCoords.lon,
+                    endLatitude: destinationCoords.lat,
+                    endLongitude: destinationCoords.lon
+                };
+                
+                try {
+                    await apiCall('/rides', 'POST', payload);
+                    showModal("Success", "Ride posted successfully!");
+                    e.target.reset();
+                    sourceCoords = null; 
+                    destinationCoords = null;
+                    document.getElementById('post-fare').value = '';
+                    loadDriverDashboard();
+                } catch(error) {}
+            });
+
+            // Event listeners for address input fields
+            const sourceInput = document.getElementById('post-source');
+            const destInput = document.getElementById('post-destination');
+            const sourceSuggestionsEl = document.getElementById('post-source-suggestions');
+            const destSuggestionsEl = document.getElementById('post-destination-suggestions');
+
+            sourceInput.addEventListener('input', () => {
+                sourceCoords = null; 
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    fetchAddressSuggestions(sourceInput.value, sourceSuggestionsEl);
+                }, 500);
+            });
+
+            destInput.addEventListener('input', () => {
+                destinationCoords = null; 
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    fetchAddressSuggestions(destInput.value, destSuggestionsEl);
+                }, 500);
+            });
+            // Event listeners for search form autocomplete
+            const searchSourceInput = document.getElementById('source');
+            const searchDestInput = document.getElementById('destination');
+            const searchSourceSuggestionsEl = document.getElementById('search-source-suggestions');
+            const searchDestSuggestionsEl = document.getElementById('search-destination-suggestions');
+
+            searchSourceInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    fetchAddressSuggestions(searchSourceInput.value, searchSourceSuggestionsEl);
+                }, 500);
+            });
+            searchDestInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    fetchAddressSuggestions(searchDestInput.value, searchDestSuggestionsEl);
+                }, 500);
+            });
+            
+            
+            
+            document.getElementById('calculate-fare-btn').addEventListener('click', async () => {
+                if (!sourceCoords || !destinationCoords) {
+                    showModal("Input Required", "Please select a valid source and destination from the suggestions.");
+                    return;
+                }
+                const button = document.getElementById('calculate-fare-btn');
+                button.textContent = '...';
+                button.disabled = true;
+                try {
+                    const fareData = await apiCall('/fare-estimate', 'POST', {
+                    	 startLatitude: sourceCoords.lat,
+                         startLongitude: sourceCoords.lon,
+                         endLatitude: destinationCoords.lat,
+                         endLongitude: destinationCoords.lon
+                    });
+                    document.getElementById('post-fare').value = Number(fareData.estimatedFare).toFixed(2);
+                } catch (error) {
+                    showModal("Calculation Error", `Could not calculate fare. ${error.message}`);
+                } finally {
+                    button.textContent = 'Estimate Fare';
+                    button.disabled = false;
+                }
+            });
+            
+            document.getElementById('payment-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const cardNumber = (document.getElementById('card-number').value || '').replace(/\s+/g, '');
+                const expiryDate = (document.getElementById('expiry-date').value || '').trim();
+                const cvv = (document.getElementById('cvv').value || '').trim();
+                if (!/^\d{13,19}$/.test(cardNumber)) { showModal('Payment Error', 'Enter a valid card number'); return; }
+                if (!/^(0[1-9]|1[0-2])\/(\d{2})$/.test(expiryDate)) { showModal('Payment Error', 'Enter a valid expiry MM/YY'); return; }
+                if (!/^\d{3,4}$/.test(cvv)) { showModal('Payment Error', 'Enter a valid CVV'); return; }
+
+                const rideIdAttr = document.getElementById('payment-booking-id').getAttribute('data-ride-id');
+                const rideId = rideIdAttr ? Number(rideIdAttr) : NaN;
+                if (!Number.isFinite(rideId)) { showModal('Payment Error', 'Ride reference missing. Re-book the ride.'); return; }
+
+                const button = e.target.querySelector('button[type="submit"]');
+                const originalText = button.textContent;
+                button.textContent = 'Processing…';
+                button.disabled = true;
+
+                try {
+                    const res = await apiCall('/payments/process', 'POST', {
+                        rideId,
+                        paymentMethod: 'CREDIT_CARD',
+                        cardNumber,
+                        expiryDate,
+                        cvv
+                    });
+                    if (res.status === 'SUCCESS') {
+                        showModal('Payment Success', `Transaction successful. ID: ${res.transactionId}`);
+                        navigateTo('passenger-dashboard');
+                        loadPassengerDashboard();
+                    } else {
+                        showModal('Payment Failed', res.message || 'Please try again.');
+                    }
+                } catch (error) {
+                    // apiCall already surfaced a modal
+                } finally {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }
+            });
+
+            document.querySelectorAll('input[name="role"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    document.getElementById('driver-fields').classList.toggle('hidden', e.target.value !== 'ROLE_DRIVER');
+                });
+            });
+        });
+
+    
+        
+          
+        // --- DYNAMIC CONTENT RENDERING ---
+        function displayRides(rides) {
+            const container = document.getElementById('rides-container');
+            if (rides.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500">No rides found matching your criteria.</p>`;
+                return;
+            }
+            container.innerHTML = rides.map(ride => `
+                <div class="bg-white p-4 rounded-lg shadow-md flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-lg">${ride.source} <i class="fas fa-arrow-right text-sm mx-2"></i> ${ride.destination}</p>
+                        <p class="text-sm text-gray-600"><i class="fas fa-calendar-alt mr-1"></i> ${new Date(ride.departureTime || ride.dateTime).toLocaleString()}</p>
+                        <p class="text-sm text-gray-600"><i class="fas fa-user-friends mr-1"></i> Driver: ${ride.driver.name}</p>
+                        <p class="text-sm text-gray-600"><i class="fas fa-chair mr-1"></i> ${ride.availableSeats} seats available</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-xl text-green-600">₹${Number(ride.totalFare || ride.fare || 0).toFixed(2)}</p>
+                        ${state.token && state.role === 'ROLE_PASSENGER' ? 
+                            `<button onclick="bookRide(${ride.id}, '${ride.source}', '${ride.destination}', ${Number(ride.totalFare || ride.fare || 0)})" class="mt-2 bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Book</button>` :
+                            state.token ? '' : '<p class="text-sm text-gray-500 mt-2">Login as Passenger to book</p>'
+                        }
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function bookRide(rideId, source, destination, fare) {
+           try {
+               const booking = await apiCall('/bookings', 'POST', { rideId });
+               
+               document.getElementById('payment-ride-details').textContent = `${source} to ${destination}`;
+               document.getElementById('payment-fare').textContent = `₹${fare.toFixed(2)}`;
+               document.getElementById('payment-booking-id').value = booking.id;
+               // store ride id for payment processing
+               document.getElementById('payment-booking-id').setAttribute('data-ride-id', String(rideId));
+               
+               navigateTo('payment');
+           } catch(error) {
+               showModal("Booking Failed", `Could not book the ride. ${error.message}`);
+           }
+        }
+
+        async function loadDriverDashboard() {
+            try {
+                const rides = await apiCall('/rides/my-rides');
+                const container = document.getElementById('my-posted-rides-container');
+                if (rides.length === 0) {
+                    container.innerHTML = `<p class="text-gray-500">You haven't posted any rides yet.</p>`;
+                    return;
+                }
+                container.innerHTML = rides.map(ride => `
+                    <div class="p-3 border rounded-md">
+                        <p class="font-semibold">${ride.source} to ${ride.destination}</p>
+                        <p class="text-xs text-gray-500">${new Date(ride.dateTime).toLocaleString()} - ${ride.availableSeats} seats left</p>
+                    </div>
+                `).join('');
+            } catch(error) {}
+        }
+
+        async function loadPassengerDashboard() {
+            try {
+                const bookings = await apiCall('/users/me/bookings');
+                const container = document.getElementById('my-bookings-container');
+                if (bookings.length === 0) {
+                    container.innerHTML = `<p class="text-gray-500">You have no bookings.</p>`;
+                    return;
+                }
+                container.innerHTML = bookings.map(booking => `
+                    <div class="p-3 border rounded-md">
+                        <div class="flex justify-between items-start">
+                            <div>
+	                            <p class="font-semibold">${booking.source} to ${booking.destination}</p>
+	                            <p class="text-xs text-gray-500">With: ${booking.driverName} on ${new Date(booking.departureTime).toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch(error) {
+                console.error("Failed to load passenger dashboard:", error);
+                document.getElementById('my-bookings-container').innerHTML = `<p class="text-red-500">Could not load bookings.</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
